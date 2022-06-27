@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>piano!!!</title>
+<meta charset = "UTF-8">
+<style>
+
+body { 
+	background-color: rgba(0,0,0,1);
+}
+
+</style>
+
+
+</head>
+
+
+<script>
+
+var WK_WIDTH = 30;
+var BK_WIDTH = 20;
+var WK_HEIGHT = 150;
+var BK_HEIGHT = 100;
+
+var NOTE_MIN = 21;
+var NOTE_MAX = 108;
+var WK_COLOR = "rgba(0, 225, 0, 1)";
+var BK_COLOR = "rgba(0, 225, 0, 1)";
+
+var notes = new Array(NOTE_MAX + 1);
+
+var FLAG_MASK_BK = false;
+
+var midi = null;  // global MIDIAccess object
+function onMIDISuccess( midiAccess ) {
+  console.log( "MIDI ready!");
+  midi = midiAccess;  // store in the global (in real usage, would probably keep in an object instance)
+  
+  listInputsAndOutputs(midi);
+  startLoggingMIDIInput(midi, 0);
+}
+
+function onMIDIFailure(msg) {
+  console.log( "Failed to get MIDI access - " + msg );
+}
+
+function listInputsAndOutputs( midiAccess ) {
+  for (var entry of midiAccess.inputs) {
+    var input = entry[1];
+    console.log( "Input port [type:'" + input.type + "'] id:'" + input.id +
+      "' manufacturer:'" + input.manufacturer + "' name:'" + input.name +
+      "' version:'" + input.version + "'" );
+  }
+
+  for (var entry of midiAccess.outputs) {
+    var output = entry[1];
+    console.log( "Output port [type:'" + output.type + "'] id:'" + output.id +
+      "' manufacturer:'" + output.manufacturer + "' name:'" + output.name +
+      "' version:'" + output.version + "'" );
+  }
+}
+
+function onMIDIMessage( event ) {
+  var str = "";
+  if(event.data.length > 1) {
+		if(event.data[0] >> 4 == 9) { // NON or NOF
+			if(event.data[2] == 0) { //NOF
+				noteOff(event.data[1]);
+			} else {
+				noteOn(event.data[1]);
+			}			
+		} else if (event.data[0] >> 4 == 8) { //NOF
+			noteOff(event.data[1]);
+		}
+	}
+  
+}
+
+function startLoggingMIDIInput( midiAccess, indexOfPort ) {
+  midiAccess.inputs.forEach( function(entry) {entry.onmidimessage = onMIDIMessage;});
+}
+
+
+function noteOn(note) {
+	notes[note] = true;
+	clearCanvas();
+	drawPiano();
+	//console.log("note  ON: " + note);
+}
+
+function noteOff(note) {
+	notes[note] = false;
+	clearCanvas();
+	drawPiano();
+	//console.log("note OFF: " + note);
+}
+
+
+
+
+
+
+
+
+
+function drawPiano() {
+	var canvas = document.getElementById("piano_canvas");
+	var ctx = canvas.getContext("2d");
+	
+	ctx.strokeStyle = "#ffffff";
+	
+	var offset = 0;
+	for(var i = NOTE_MIN; i <= NOTE_MAX; i++) {
+	
+		switch(i % 12) {
+			case 0:
+				ctx.fillStyle = (notes[i]?WK_COLOR:"#FFFFFF00");
+				ctx.fillRect(offset, BK_HEIGHT, WK_WIDTH, WK_HEIGHT - BK_HEIGHT);
+				ctx.fillRect(offset, 0, WK_WIDTH-BK_WIDTH*0.66, WK_HEIGHT);
+				offset += WK_WIDTH;
+			break;
+			
+			case 1:
+				ctx.fillStyle = (notes[i]?BK_COLOR:"#00000000");
+				ctx.fillRect(offset - BK_WIDTH*0.66, 0, BK_WIDTH, BK_HEIGHT);
+				
+			break;
+			
+			case 2:
+				ctx.fillStyle = (notes[i]?WK_COLOR:"#FFFFFF00");
+				ctx.fillRect(offset, BK_HEIGHT, WK_WIDTH, WK_HEIGHT - BK_HEIGHT);
+				ctx.fillRect(offset + BK_WIDTH*0.33, 0, WK_WIDTH-BK_WIDTH*0.66, WK_HEIGHT);
+				offset += WK_WIDTH;
+			break;
+			
+			case 3:
+				ctx.fillStyle = (notes[i]?BK_COLOR:"#00000000");		
+				ctx.fillRect(offset - BK_WIDTH*0.33, 0, BK_WIDTH, BK_HEIGHT);
+			break;
+			
+			case 4:
+				ctx.fillStyle = (notes[i]?WK_COLOR:"#FFFFFF00");
+				ctx.fillRect(offset, BK_HEIGHT, WK_WIDTH, WK_HEIGHT - BK_HEIGHT);
+				ctx.fillRect(offset + BK_WIDTH*0.66, 0, WK_WIDTH-BK_WIDTH*0.66, WK_HEIGHT);
+				offset += WK_WIDTH;
+			break;
+			
+			case 5:
+				ctx.fillStyle = (notes[i]?WK_COLOR:"#FFFFFF00");
+				ctx.fillRect(offset, BK_HEIGHT, WK_WIDTH, WK_HEIGHT - BK_HEIGHT);
+				ctx.fillRect(offset, 0, WK_WIDTH-BK_WIDTH*0.8, WK_HEIGHT);
+				offset += WK_WIDTH;
+			break;
+			
+			case 6:
+				ctx.fillStyle = (notes[i]?BK_COLOR:"#00000000");
+				ctx.fillRect(offset - BK_WIDTH*0.8, 0, BK_WIDTH, BK_HEIGHT);
+			break;
+			
+			case 7:
+				ctx.fillStyle = (notes[i]?WK_COLOR:"#FFFFFF00");
+				ctx.fillRect(offset, BK_HEIGHT, WK_WIDTH, WK_HEIGHT - BK_HEIGHT);
+				ctx.fillRect(offset + BK_WIDTH*0.2, 0, WK_WIDTH-BK_WIDTH*0.7, WK_HEIGHT);
+				offset += WK_WIDTH;
+			break;
+			
+			case 8:
+				ctx.fillStyle = (notes[i]?BK_COLOR:"#00000000");
+				ctx.fillRect(offset - BK_WIDTH*0.5, 0, BK_WIDTH, BK_HEIGHT);
+			break;
+			
+			case 9:
+				ctx.fillStyle = (notes[i]?WK_COLOR:"#FFFFFF00");
+				ctx.fillRect(offset, BK_HEIGHT, WK_WIDTH, WK_HEIGHT - BK_HEIGHT);
+				ctx.fillRect(offset + BK_WIDTH*0.5, 0, WK_WIDTH-BK_WIDTH*0.7, WK_HEIGHT);
+				offset += WK_WIDTH;
+			break;
+			
+			case 10:			
+				ctx.fillStyle = (notes[i]?BK_COLOR:"#00000000");
+				ctx.fillRect(offset - BK_WIDTH*0.2, 0, BK_WIDTH, BK_HEIGHT);				
+			break;
+			
+			case 11:
+				ctx.fillStyle = (notes[i]?WK_COLOR:"#FFFFFF00");
+				ctx.fillRect(offset, BK_HEIGHT, WK_WIDTH, WK_HEIGHT - BK_HEIGHT);
+				ctx.fillRect(offset + BK_WIDTH*0.8, 0, WK_WIDTH-BK_WIDTH*0.8, WK_HEIGHT);
+				offset += WK_WIDTH;
+			break;
+			
+		
+		}
+	}
+		
+		
+		
+	if(FLAG_MASK_BK) {
+		offset = 0;	
+		for(var i = NOTE_MIN; i <= NOTE_MAX; i++) {
+		
+			switch(i % 12) {
+				case 0:
+					offset += WK_WIDTH;
+				break;
+				
+				case 1:
+					if(!notes[i]) {
+						ctx.clearRect(offset - BK_WIDTH*0.66, 0, BK_WIDTH, BK_HEIGHT);
+					}
+					
+				break;
+				
+				case 2:
+					offset += WK_WIDTH;
+				break;
+				
+				case 3:
+					if(!notes[i]) {
+						ctx.clearRect(offset - BK_WIDTH*0.33, 0, BK_WIDTH, BK_HEIGHT);
+					}
+				break;
+				
+				case 4:
+					offset += WK_WIDTH;
+				break;
+				
+				case 5:
+					offset += WK_WIDTH;
+				break;
+				
+				case 6:
+					if(!notes[i]) {
+						ctx.clearRect(offset - BK_WIDTH*0.8, 0, BK_WIDTH, BK_HEIGHT);
+					}
+				break;
+				
+				case 7:
+					offset += WK_WIDTH;
+				break;
+				
+				case 8:
+					if(!notes[i]) {
+						ctx.clearRect(offset - BK_WIDTH*0.5, 0, BK_WIDTH, BK_HEIGHT);
+					}
+				break;
+				
+				case 9:
+					offset += WK_WIDTH;
+				break;
+				
+				case 10:			
+					if(!notes[i]) {
+						ctx.clearRect(offset - BK_WIDTH*0.2, 0, BK_WIDTH, BK_HEIGHT);
+					}			
+				break;
+				
+				case 11:
+					offset += WK_WIDTH;
+				break;
+				
+			
+			}
+			
+		}
+		
+	}
+	
+	/*
+	for(var i = 0; i < 88; i++) {
+		ctx.strokeRect(WK_WIDTH*i, 0, WK_WIDTH, WK_HEIGHT);
+	}
+	
+	
+	for(var i = 0; i < 60; i++) {
+		if(i % 7 != 1 && i%7 != 5) {
+			ctx.fillRect(BK_WIDTH + WK_WIDTH*i, 0, BK_WIDTH, BK_HEIGHT);
+		}
+	}
+	*/
+}
+
+function clearCanvas() {
+	var canvas = document.getElementById("piano_canvas");
+	canvas.width  = 60*WK_WIDTH; 
+	canvas.height = WK_HEIGHT+20;
+	
+	var ctx = canvas.getContext("2d");
+	ctx.globalCompositeOperation='destination-over';
+	ctx.filter = 'blur(5px)';
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+
+
+
+function setup() {
+
+	clearCanvas();
+	drawPiano();
+	
+	for(var i = 0; i < notes.length; i++) {
+		notes[i] = false;
+	}
+
+	navigator.requestMIDIAccess().then( onMIDISuccess, onMIDIFailure );
+}
+</script>
+
+
+<body onLoad="setup()">
+<canvas id="piano_canvas" style="border:0px solid #cccccc">
+
+</canvas><br><br>
+
+
+
+</body>
+</html>
